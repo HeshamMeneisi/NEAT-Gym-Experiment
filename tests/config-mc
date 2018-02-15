@@ -1,10 +1,8 @@
-# NEAT configuration for the bit-sequence memory experiment.
-
 # The `NEAT` section specifies parameters particular to the NEAT algorithm
 # or the experiment itself.  This is the only required section.
 [NEAT]
 fitness_criterion     = max
-fitness_threshold     = -199
+fitness_threshold     = 1
 pop_size              = 300
 reset_on_extinction   = 1
 
@@ -61,4 +59,3 @@ max_stagnation  = 20
 [DefaultReproduction]
 elitism            = 2
 survival_threshold = 0.2
-

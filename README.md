@@ -43,3 +43,25 @@ Running `mountain_car.py` untill convergence will first display a fitness over g
 Then the winning agent will take control of the environment until you terminate:
 
 ![alt text](https://raw.githubusercontent.com/HeshamMeneisi/NEAT-Gym-Experiment/master/mc.gif)
+
+# NEATGymExperiment
+
+**Constructor**
+
+|  Parameter  | Default | Description  |
+|---|---|--|
+| `gym_experiment`  |  | The id of the gym experiment.  |
+| `neat_config` |  | The neat-python configuration.  |
+| `interpret_action` | |  A callable that infers action from network output. |
+| `runs_per_genome` | | Experiments run for every genome. |
+| `extract_fitness` | | A callable that extracts fitness from the experiment record.
+| `render=False` | False | Whether to render experiments.
+| `render_delay` | 0.005 | The delay per frame when rendering.
+| `verbose` | False | Print extra information.
+| `render_champ` | False | Render the champion of every generation.
+ 
+ To run the experiment:
+ 
+`winner = exp.run()`
+
+The winning champion is always saved in a file with the name `experiment_id_winner.dat` and the best fitness for each generation is saved in `experiment_id_flog.dat`

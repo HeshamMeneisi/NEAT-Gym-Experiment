@@ -1,7 +1,7 @@
 import gym
 import time
 from gym import envs
-print(envs.registry.all())
+print([e.id for e in envs.registry.all()])
 
 env = gym.make('CartPole-v0')
 env.reset()
