@@ -63,6 +63,8 @@ Then the winning agent will take control of the environment until you terminate:
 | `render_all` | False | Render all evaluation experiments.
 | `render_delay` | 0.005 | The delay per frame when rendering (In addition to any delay in the gym Env.)
 | `render_max_frames` | 200 | The maximum frames to render in a test. |
+| `mode` | 'default' | `['default', 'threaded', 'parallel]`
+| `instances` | 4 | Threads or proccesses, depending on `mode`
  
  To run the experiment:
  

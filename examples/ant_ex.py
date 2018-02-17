@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 from OpenGL import GLU
 
 
+def int_a(a):
+    return np.array(a)
+
+
 def fitness(rec):
     return rec['reward'].mean()
 
@@ -14,13 +18,14 @@ def fitness(rec):
 # Load configuration
 config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                      neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                     os.path.join(os.path.dirname(__file__), 'config-pong'))
+                     os.path.join(os.path.dirname(__file__), 'config-ant'))
 
 # Construct experiment
-exp = NEATGymExperiment('RoboschoolPong-v1', config,
-                        interpret_action=lambda a: np.array(a),
-                        runs_per_genome=1,
-                        extract_fitness=fitness
+exp = NEATGymExperiment('RoboschoolAnt-v1', config,
+                        interpret_action=int_a,
+                        runs_per_genome=5,
+                        extract_fitness=fitness,
+                        mode='parallel'
                         )
 
 exp.exp_info(True)
