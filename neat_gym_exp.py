@@ -7,10 +7,11 @@ import time
 
 class NEATGymExperiment:
 
-    def __init__(self, gym_experiment, neat_config, interpret_action, runs_per_genome, extract_fitness, render=False,
-                 render_delay=0.005, verbose=False, render_champ=False):
+    def __init__(self, gym_experiment, neat_config, extract_fitness, runs_per_genome=1, interpret_action=None,
+                 multiplayer=False, server_guide=None, n_players=1, verbose=False, render_champ=False, render=False, render_delay=0.005,
+                 render_max_frames=200):
 
-        assert hasattr(interpret_action, '__call__')
+        assert interpret_action is None or hasattr(interpret_action, '__call__')
         assert runs_per_genome > 0
         assert hasattr(extract_fitness, '__call__')
 
@@ -20,14 +21,21 @@ class NEATGymExperiment:
         self.interpret_action = interpret_action
         self.rpg = runs_per_genome
         self.extract_f = extract_fitness
-        self.render = render
-        self.r_delay = render_delay
+        self.multiplayer = multiplayer
+        self.server_guide = server_guide
+        self.n_players=n_players
         self.verbose = verbose
+        self.render = render
         self.render_champ = render_champ
+        self.r_delay = render_delay
+        self.render_max_frames = render_max_frames
 
         self.record = dict()
         self.record['reward'] = np.zeros(runs_per_genome)
         self.record['obs'] = []
+
+        if multiplayer:
+            self.env.unwrapped.multiplayer(self.env, game_server_guid=server_guide, player_n=n_players)
 
         # Create the population, which is the top-level object for a NEAT run.
         self.p = neat.Population(neat_config)
@@ -45,7 +53,9 @@ class NEATGymExperiment:
         :return: Action
         """
         net = neat.nn.FeedForwardNetwork.create(genome, self.config)
-        return self.interpret_action(net.activate(obs))
+        if self.interpret_action is not None:
+            return self.interpret_action(net.activate(obs))
+        return net.activate(obs)
 
     def get_fitness(self, genome):
         """
@@ -60,9 +70,11 @@ class NEATGymExperiment:
             self.record['reward'][i] = 0
             self.record['obs'].append([])
             self.record['obs'][i].append(obs.tolist())
+            t = 0
             while not done:
-                if self.render:
+                if self.render and t < self.render_max_frames:
                     self.env.render()
+                    t += 1
                 a = self.get_action(genome, obs)
                 obs, r, done, inf = self.env.step(a)
                 self.record['reward'][i] += r
@@ -87,6 +99,7 @@ class NEATGymExperiment:
         if self.p.best_genome:
             self.f_record.append(self.p.best_genome.fitness)
             if self.render_champ:
+                print("Testing champion.")
                 self.test(self.p.best_genome, n=1)
 
     def run(self):
@@ -121,7 +134,7 @@ class NEATGymExperiment:
             time.sleep(self.r_delay)
             self.env.render()
             obs, r, done, inf = self.env.step(self.get_action(genome, obs))
-            if done:
+            if done or t >= self.render_max_frames:
                 print("Resetting. Steps:", t)
                 k += 1
 
@@ -132,3 +145,26 @@ class NEATGymExperiment:
                 t = 1
             else:
                 t += 1
+        self.env.close()
+
+    def exp_info(self, _print=False):
+        """
+        Return information about the loaded environment.
+        :return:
+        """
+        info = {
+            'obs_space': self.env.observation_space,
+            'obs_s_max': self.env.observation_space.high if hasattr(self.env.observation_space, 'high') else None,
+            'obs_s_min': self.env.observation_space.low if hasattr(self.env.observation_space, 'low') else None,
+            'act_space': self.env.action_space,
+            'act_s_max': self.env.action_space.high if hasattr(self.env.action_space, 'high') else None,
+            'act_s_min': self.env.action_space.low if hasattr(self.env.action_space, 'high') else None,
+            'rw_range': self.env.reward_range,
+            'meta': self.env.metadata
+        }
+
+        if _print:
+            for k, v in info.items():
+                print(k, ':', v)
+
+        return info
