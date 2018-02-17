@@ -50,15 +50,19 @@ Then the winning agent will take control of the environment until you terminate:
 
 |  Parameter  | Default | Description  |
 |---|---|--|
-| `gym_experiment`  |  | The id of the gym experiment.  |
-| `neat_config` |  | The neat-python configuration.  |
-| `interpret_action` | |  A callable that infers action from network output. |
-| `runs_per_genome` | | Experiments run for every genome. |
+| `gym_experiment`  | | The id of the gym experiment.  |
+| `neat_config` | | The neat-python configuration.  |
 | `extract_fitness` | | A callable that extracts fitness from the experiment record.
-| `render=False` | False | Whether to render experiments.
-| `render_delay` | 0.005 | The delay per frame when rendering.
+| `runs_per_genome` | 1 | Experiments run for every genome. |
+| `interpret_action` | None |  A callable that infers action from network output. |
+| `multiplayer` | False | Whether this is a multiplayer game.
+| `server_guide` | None | The `game_server_guide` to set.
+| `n_players` | 1 | The number of active players in a multiplayer environment.
 | `verbose` | False | Print extra information.
 | `render_champ` | False | Render the champion of every generation.
+| `render_all` | False | Render all evaluation experiments.
+| `render_delay` | 0.005 | The delay per frame when rendering (In addition to any delay in the gym Env.)
+| `render_max_frames` | 200 | The maximum frames to render in a test. |
  
  To run the experiment:
  

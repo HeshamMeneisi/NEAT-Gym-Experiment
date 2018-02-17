@@ -8,8 +8,8 @@ import time
 class NEATGymExperiment:
 
     def __init__(self, gym_experiment, neat_config, extract_fitness, runs_per_genome=1, interpret_action=None,
-                 multiplayer=False, server_guide=None, n_players=1, verbose=False, render_champ=False, render=False, render_delay=0.005,
-                 render_max_frames=200):
+                 multiplayer=False, server_guide=None, n_players=1, verbose=False, render_champ=False, render_all=False,
+                 render_delay=0.005, render_max_frames=200):
 
         assert interpret_action is None or hasattr(interpret_action, '__call__')
         assert runs_per_genome > 0
@@ -25,7 +25,7 @@ class NEATGymExperiment:
         self.server_guide = server_guide
         self.n_players=n_players
         self.verbose = verbose
-        self.render = render
+        self.render = render_all
         self.render_champ = render_champ
         self.r_delay = render_delay
         self.render_max_frames = render_max_frames
