@@ -23,7 +23,7 @@ config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
 # Construct experiment
 exp = NEATGymExperiment('RoboschoolAnt-v1', config,
                         interpret_action=int_a,
-                        runs_per_genome=5,
+                        runs_per_genome=2,
                         extract_fitness=fitness,
                         mode='parallel'
                         )
@@ -36,7 +36,7 @@ plt.plot(range(len(exp.f_record)), exp.f_record)
 plt.ylabel('Fitness')
 plt.xlabel('Generation')
 plt.xlim(0, len(exp.f_record))
-plt.xticks(range(len(exp.f_record)))
+plt.xticks(range(0, len(exp.f_record), len(exp.f_record) // 10))
 plt.show()
 
 exp.test(winner)

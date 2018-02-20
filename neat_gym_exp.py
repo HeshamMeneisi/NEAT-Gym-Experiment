@@ -77,9 +77,14 @@ class NEATGymExperiment:
         :param obs: The observation from our environment
         :return: Action
         """
-        net = neat.nn.FeedForwardNetwork.create(genome, self.config)
+        if self.config.genome_config.feed_forward:
+            net = neat.nn.FeedForwardNetwork.create(genome, self.config)
+        else:
+            net = neat.nn.RecurrentNetwork.create(genome, self.config)
+
         if self.interpret_action is not None:
             return self.interpret_action(net.activate(obs))
+
         return net.activate(obs)
 
     def get_fitness(self, genome):
