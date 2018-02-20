@@ -25,7 +25,8 @@ exp = NEATGymExperiment('MountainCar-v0', config,
                         interpret_action=interpret_a,
                         runs_per_genome=5,
                         extract_fitness=fitness,
-                        mode='parallel'
+                        mode='parallel',
+                        network=neat.nn.MLRecurrentNetwork
                         )
 
 exp.exp_info(True)

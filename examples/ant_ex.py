@@ -25,7 +25,8 @@ exp = NEATGymExperiment('RoboschoolAnt-v1', config,
                         interpret_action=int_a,
                         runs_per_genome=2,
                         extract_fitness=fitness,
-                        mode='parallel'
+                        mode='parallel',
+                        network=neat.nn.RecurrentNetwork
                         )
 
 exp.exp_info(True)

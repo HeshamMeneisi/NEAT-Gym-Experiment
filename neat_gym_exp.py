@@ -10,7 +10,8 @@ class NEATGymExperiment:
 
     def __init__(self, gym_experiment, neat_config, extract_fitness, runs_per_genome=1, interpret_action=None,
                  multiplayer=False, server_guide=None, n_players=1, verbose=False, render_champ=False, render_all=False,
-                 render_delay=0.005, render_max_frames=200, mode='default', instances=4):
+                 render_delay=0.005, render_max_frames=200, mode='default', instances=4,
+                 network=neat.nn.FeedForwardNetwork):
 
         assert interpret_action is None or hasattr(interpret_action, '__call__')
         assert runs_per_genome > 0
@@ -33,6 +34,7 @@ class NEATGymExperiment:
         self.render_max_frames = render_max_frames
         self.mode = mode
         self.instances = instances
+        self.network = network
 
         if mode == 'threaded':
             self.pool_lock = Lock()
@@ -77,10 +79,7 @@ class NEATGymExperiment:
         :param obs: The observation from our environment
         :return: Action
         """
-        if self.config.genome_config.feed_forward:
-            net = neat.nn.FeedForwardNetwork.create(genome, self.config)
-        else:
-            net = neat.nn.RecurrentNetwork.create(genome, self.config)
+        net = self.network.create(genome, self.config)
 
         if self.interpret_action is not None:
             return self.interpret_action(net.activate(obs))

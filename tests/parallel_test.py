@@ -20,7 +20,8 @@ exp = NEATGymExperiment('CartPole-v0', config,
                         interpret_action=int_a,
                         runs_per_genome=100,
                         extract_fitness=fitness,
-                        mode='parallel')
+                        mode='parallel',
+                        network=neat.nn.RecurrentNetwork)
 
 winner = exp.run()
 

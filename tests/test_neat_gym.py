@@ -10,7 +10,8 @@ config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
 exp = NEATGymExperiment('CartPole-v0', config,
                         interpret_action=lambda a: round(a[0]),
                         runs_per_genome=100,
-                        extract_fitness=lambda rec: rec['reward'].mean())
+                        extract_fitness=lambda rec: rec['reward'].mean(),
+                        network=neat.nn.RecurrentNetwork)
 
 winner = exp.run()
 
