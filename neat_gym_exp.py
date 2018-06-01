@@ -3,6 +3,7 @@ import pickle
 import gym
 import numpy as np
 import time
+import os.path
 from copy import deepcopy
 from threading import Lock
 
@@ -11,7 +12,7 @@ class NEATGymExperiment:
     def __init__(self, gym_experiment, neat_config, extract_fitness, runs_per_genome=1, interpret_action=None,
                  multiplayer=False, server_guide=None, n_players=1, verbose=False, render_champ=False, render_all=False,
                  render_delay=0.005, render_max_frames=200, mode='default', instances=4,
-                 network=neat.nn.FeedForwardNetwork):
+                 network=neat.nn.FeedForwardNetwork, starting_gen=None, checkpoint_freq=5):
 
         assert interpret_action is None or hasattr(interpret_action, '__call__')
         assert runs_per_genome > 0
@@ -35,6 +36,7 @@ class NEATGymExperiment:
         self.mode = mode
         self.instances = instances
         self.network = network
+        self.checkpoint_freq = checkpoint_freq
 
         if mode == 'threaded':
             self.pool_lock = Lock()
@@ -60,6 +62,23 @@ class NEATGymExperiment:
         self.p.add_reporter(neat.StdOutReporter(False))
 
         self.f_record = []
+
+        if starting_gen:
+            self.generation = starting_gen
+        else:
+            path = './' + self.exp_name + '_flog.dat'
+            if os.path.exists(path):
+                with open(path, 'rb') as file:
+                    flog = pickle.load(file)
+                    self.generation = len(flog)
+                    self.f_record = flog
+
+                    path = './' + self.exp_name + '_winner_' + str(self.generation) + '.dat'
+                    if os.path.exists(path):
+                        with open(path, 'rb') as file:
+                            self.p.best_genome = pickle.load(file)
+            else:
+                self.generation = 0
 
     def acquire_env(self):
         self.pool_lock.acquire()
@@ -155,28 +174,43 @@ class NEATGymExperiment:
         Run until the fitness threshold is reached.
         :return:
         """
-        if self.mode == 'threaded':
-            print("Mode: Threaded")
-            pe = neat.ThreadedEvaluator(self.instances, self.eval_genome)
-            winner = self.p.run(pe.evaluate)
-        elif self.mode == 'parallel':
-            print("Mode: Parallel")
-            pe = neat.ParallelEvaluator(self.instances, self.eval_genome)
-            winner = self.p.run(pe.evaluate)
-        else:
-            print("Mode: Default")
-            winner = self.p.run(self.eval_genomes)
+        p_th = neat.ThreadedEvaluator(self.instances, self.eval_genome)
+        p_par = neat.ParallelEvaluator(self.instances, self.eval_genome)
 
-        self.f_record.append(winner.fitness)
+        while not self.p.best_genome or self.p.best_genome.fitness < self.p.config.fitness_threshold:
+            print("\n\n=================== GymNEAT Running Generation %d ===================\n\n"%self.generation)
+            if self.mode == 'threaded':
+                print("Mode: Threaded")
+                winner = self.p.run(p_th.evaluate, 1)
+            elif self.mode == 'parallel':
+                print("Mode: Parallel")
 
-        pickle.dump(winner, open('./' + self.exp_name + '_winner.dat', 'wb'))
+                winner = self.p.run(p_par.evaluate, 1)
+            else:
+                print("Mode: Default")
+                winner = self.p.run(self.eval_genomes, 1)
 
-        pickle.dump(self.f_record, open('./' + self.exp_name + '_flog.dat', 'wb'))
+            self.f_record.append(winner.fitness)
+
+            if self.generation % self.checkpoint_freq == 0:
+                with open('./' + self.exp_name + '_winner_' + str(self.generation) + '.dat', 'wb') as file:
+                    pickle.dump(winner, file)
+
+                with open('./' + self.exp_name + '_flog.dat', 'wb') as file:
+                    pickle.dump(self.f_record, file)
+
+            self.generation += 1
+
+        with open('./' + self.exp_name + '_best_' + str(self.generation) + '.dat', 'wb') as file:
+            pickle.dump(self.p.best_genome, file)
+
+        with open('./' + self.exp_name + '_flog.dat', 'wb') as file:
+            pickle.dump(self.f_record, file)
 
         # Display the winning genome.
-        print('\nBest genome:\n{!s}'.format(winner))
+        print('\nBest genome:\n{!s}'.format(self.p.best_genome))
 
-        return winner
+        return self.p.best_genome
 
     def test(self, genome, n=None):
         """

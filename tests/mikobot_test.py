@@ -42,7 +42,7 @@ x = 25
 
 env.render()
 while True:
-    time.sleep(0.03)
+    time.sleep(0.01)
     #a = env.action_space.sample()
 
     if t < x:
@@ -66,7 +66,7 @@ while True:
     elif t < 10*x:
         a = -whirl
     else:
-        a = left_front_raised
+        a = crouch
 
     env.render()
     obs, r, done, inf = env.step(a)
