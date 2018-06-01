@@ -66,19 +66,25 @@ class NEATGymExperiment:
         if starting_gen:
             self.generation = starting_gen
         else:
-            path = './' + self.exp_name + '_flog.dat'
+            path = self.get_log_name() + '_flog.dat'
             if os.path.exists(path):
                 with open(path, 'rb') as file:
                     flog = pickle.load(file)
                     self.generation = len(flog)
                     self.f_record = flog
 
-                    path = './' + self.exp_name + '_winner_' + str(self.generation) + '.dat'
+                    path = self.get_log_name() + '_population_' + str(self.generation-1) + '.dat'
                     if os.path.exists(path):
                         with open(path, 'rb') as file:
-                            self.p.best_genome = pickle.load(file)
+                            self.p = pickle.load(file)
             else:
                 self.generation = 0
+
+    def get_log_name(self):
+        p = './logs/'
+        if not os.path.exists(p):
+            os.mkdir(p)
+        return p + self.exp_name
 
     def acquire_env(self):
         self.pool_lock.acquire()
@@ -178,7 +184,7 @@ class NEATGymExperiment:
         p_par = neat.ParallelEvaluator(self.instances, self.eval_genome)
 
         while not self.p.best_genome or self.p.best_genome.fitness < self.p.config.fitness_threshold:
-            print("\n\n=================== GymNEAT Running Generation %d ===================\n\n"%self.generation)
+            print("\n\n=================== NEATGym Running Generation %d ===================\n\n"%self.generation)
             if self.mode == 'threaded':
                 print("Mode: Threaded")
                 winner = self.p.run(p_th.evaluate, 1)
@@ -193,18 +199,18 @@ class NEATGymExperiment:
             self.f_record.append(winner.fitness)
 
             if self.generation % self.checkpoint_freq == 0:
-                with open('./' + self.exp_name + '_winner_' + str(self.generation) + '.dat', 'wb') as file:
-                    pickle.dump(winner, file)
+                with open(self.get_log_name() + '_population_' + str(self.generation) + '.dat', 'wb') as file:
+                    pickle.dump(self.p, file)
 
-                with open('./' + self.exp_name + '_flog.dat', 'wb') as file:
+                with open(self.get_log_name() + '_flog.dat', 'wb') as file:
                     pickle.dump(self.f_record, file)
 
             self.generation += 1
 
-        with open('./' + self.exp_name + '_best_' + str(self.generation) + '.dat', 'wb') as file:
+        with open(self.get_log_name() + '_best_' + str(self.generation) + '.dat', 'wb') as file:
             pickle.dump(self.p.best_genome, file)
 
-        with open('./' + self.exp_name + '_flog.dat', 'wb') as file:
+        with open(self.get_log_name() + '_flog.dat', 'wb') as file:
             pickle.dump(self.f_record, file)
 
         # Display the winning genome.
