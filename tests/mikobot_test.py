@@ -7,8 +7,8 @@ from OpenGL import GLU
 import gym.envs.registration as reg
 from mikobot import MiKoBot
 
-reg.register("MiKo-v1", reward_threshold=2500, entry_point=MiKoBot, max_episode_steps=400,
-             tags={"pg_complexity": 8000000})
+reg.register("MiKo-v1", reward_threshold=2500, entry_point=MiKoBot, max_episode_steps=1000,
+             tags={"pg_complexity": 8000000, 'no_death': True})
 
 print([e.id for e in envs.registry.all()])
 
@@ -65,8 +65,10 @@ while True:
         a = whirl
     elif t < 10*x:
         a = -whirl
-    else:
+    elif t < 11*x:
         a = crouch
+    elif t > 14*x:
+        a = up
 
     env.render()
     obs, r, done, inf = env.step(a)

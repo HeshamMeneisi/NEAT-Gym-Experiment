@@ -11,7 +11,7 @@ class NEATGymExperiment:
 
     def __init__(self, gym_experiment, neat_config, extract_fitness, runs_per_genome=1, interpret_action=None,
                  multiplayer=False, server_guide=None, n_players=1, verbose=False, render_champ=False, render_all=False,
-                 render_delay=0.005, render_max_frames=200, mode='default', instances=4,
+                 render_delay=0.005, render_max_frames=200, mode='default', instances=8,
                  network=neat.nn.FeedForwardNetwork, starting_gen=None, checkpoint_freq=5):
 
         assert interpret_action is None or hasattr(interpret_action, '__call__')
@@ -46,9 +46,9 @@ class NEATGymExperiment:
                 self.pool_env.append(deepcopy(self.env))
 
         self.record = dict()
-        self.record['reward'] = np.zeros(runs_per_genome)
+        self.record['reward'] = np.zeros((runs_per_genome, self.env.spec.max_episode_steps))
         s = list(self.env.observation_space.shape)
-        s.insert(0, self.env._max_episode_steps)
+        s.insert(0, self.env.spec.max_episode_steps)
         s.insert(0, runs_per_genome)
         self.record['obs'] = np.zeros(tuple(s))
 
@@ -63,22 +63,25 @@ class NEATGymExperiment:
 
         self.f_record = []
 
-        if starting_gen:
-            self.generation = starting_gen
-        else:
-            path = self.get_log_name() + '_flog.dat'
-            if os.path.exists(path):
-                with open(path, 'rb') as file:
-                    flog = pickle.load(file)
-                    self.generation = len(flog)
-                    self.f_record = flog
 
-                    path = self.get_log_name() + '_population_' + str(self.generation-1) + '.dat'
-                    if os.path.exists(path):
-                        with open(path, 'rb') as file:
-                            self.p = pickle.load(file)
-            else:
-                self.generation = 0
+        path = self.get_log_name() + '_flog.dat'
+        if os.path.exists(path):
+            with open(path, 'rb') as file:
+                flog = pickle.load(file)
+                self.f_record = flog
+
+                if starting_gen is not None:
+                    path = self.get_log_name() + '_population_' + str(starting_gen) + '.dat'
+                    self.generation = starting_gen + 1
+                else:
+                    self.generation = len(flog) - 1
+                    path = self.get_log_name() + '_population_' + str(self.generation) + '.dat'
+
+                if os.path.exists(path):
+                    with open(path, 'rb') as file:
+                        self.p = pickle.load(file)
+        else:
+            self.generation = starting_gen if starting_gen else 0
 
     def get_log_name(self):
         p = './logs/'
@@ -127,7 +130,7 @@ class NEATGymExperiment:
         for i in range(self.rpg):
             done = False
             obs = env.reset()
-            record['reward'][i] = 0
+            record['reward'][i, :] = 0
             record['obs'][i, 0] = obs
             t = 1
             while not done:
@@ -135,7 +138,7 @@ class NEATGymExperiment:
                     env.render()
                 a = self.get_action(genome, obs)
                 obs, r, done, inf = env.step(a)
-                record['reward'][i] += r
+                record['reward'][i, t] = r
                 record['obs'][i, t] = obs
 
         if self.mode == 'threaded':
@@ -170,7 +173,7 @@ class NEATGymExperiment:
             genome.fitness = self.eval_genome(genome)
 
         if self.p.best_genome:
-            self.f_record.append(self.p.best_genome.fitness)
+            self.record_fitness()
             if self.render_champ:
                 print("Testing champion.")
                 self.test(self.p.best_genome, n=1)
@@ -187,16 +190,20 @@ class NEATGymExperiment:
             print("\n\n=================== NEATGym Running Generation %d ===================\n\n"%self.generation)
             if self.mode == 'threaded':
                 print("Mode: Threaded")
-                winner = self.p.run(p_th.evaluate, 1)
+
+                self.p.run(p_th.evaluate, 1)
+
+                self.record_fitness()
             elif self.mode == 'parallel':
                 print("Mode: Parallel")
 
-                winner = self.p.run(p_par.evaluate, 1)
+                self.p.run(p_par.evaluate, 1)
+
+                self.record_fitness()
+
             else:
                 print("Mode: Default")
-                winner = self.p.run(self.eval_genomes, 1)
-
-            self.f_record.append(winner.fitness)
+                self.p.run(self.eval_genomes, 1)
 
             if self.generation % self.checkpoint_freq == 0:
                 with open(self.get_log_name() + '_population_' + str(self.generation) + '.dat', 'wb') as file:
@@ -217,6 +224,14 @@ class NEATGymExperiment:
         print('\nBest genome:\n{!s}'.format(self.p.best_genome))
 
         return self.p.best_genome
+
+    def record_fitness(self):
+        i = self.generation
+        if i < len(self.f_record):
+            self.f_record[i] = self.p.best_genome.fitness
+            self.f_record = self.f_record[:i+1]
+        else:
+            self.f_record.append(self.p.best_genome.fitness)
 
     def test(self, genome, n=None):
         """

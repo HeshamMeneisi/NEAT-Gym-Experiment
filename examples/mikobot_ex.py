@@ -17,7 +17,8 @@ def int_a(a):
 
 
 def fitness(rec):
-    return rec['reward'].mean()
+    f = rec['reward'].sum(axis=1).mean()
+    return f
 
 
 # Load configuration
@@ -31,9 +32,12 @@ exp = NEATGymExperiment('MiKo-v1', config,
                         runs_per_genome=2,
                         extract_fitness=fitness,
                         mode='parallel',
+                        instances=7,
                         # render_all=True,
-                        network=neat.nn.MLRecurrentNetwork
+                        # network=neat.nn.GRUNetwork,
+                        # starting_gen=0
                         )
+
 
 exp.exp_info(True)
 

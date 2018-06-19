@@ -24,7 +24,10 @@ config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
 exp = NEATGymExperiment('MiKo-v1', config,
                         interpret_action=int_a,
                         extract_fitness=lambda x: x,
-                        network=neat.nn.MLRecurrentNetwork
+                        # network=neat.nn.MLRecurrentNetwork,
+                        # starting_gen=250,
+                        render_delay=0.03,
+                        render_max_frames=1000
                         )
 
 exp.test(exp.p.best_genome)
