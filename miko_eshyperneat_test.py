@@ -19,7 +19,7 @@ reg.register("MiKo-v1", reward_threshold=2500, entry_point=MiKoBot, max_episode_
 input_coordinates = [(8, 2), (10, 0), (8, 8), (10, 10), (2, 8), (0, 10), (2, 2), (0, 0), (3, 0), (7, 0)]
 output_coordinates = [(8, 2), (10, 0), (8, 8), (10, 10), (2, 8), (0, 10), (2, 2), (0, 0)]
 
-individual = 10
+individual = 460
 
 sub = Substrate(input_coordinates, output_coordinates)
 
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     env = gym.make("MiKo-v1")
 
     with open('./logs/' + str(individual), 'rb') as f:
-        winner = pickle.load(f)
+        winner = pickle.load(f).best_genome
 
     # Save CPPN if wished reused and draw it + winner to file.
     cppn = neat.nn.FeedForwardNetwork.create(winner, config)

@@ -5,6 +5,7 @@ from pureples.es_hyperneat.es_hyperneat import ESNetwork
 import pickle
 import os
 
+
 def eval_genomes(all, config):
     for key, g in all.items():
         eval_fitness(g, config)
@@ -91,7 +92,7 @@ def run_es(gens, _env, _max_steps, config, _params, _substrate, _max_trials=100,
             if not os.path.exists('./logs'):
                 os.mkdir('./logs')
             with open('./logs/' + str(gen), 'wb') as f:
-                pickle.dump(winner_ten, f)
+                pickle.dump(pop, f)
 
         gen += 1
 
@@ -148,23 +149,32 @@ def run_hyper(gens, env, max_steps, config, substrate, activations, max_trials=1
     p_th = neat.ThreadedEvaluator(8, eval_fitness)
     p_par = neat.ParallelEvaluator(8, eval_fitness)
 
+    gen = 0
+
     while not pop.best_genome or pop.best_genome.fitness < pop.config.fitness_threshold:
         if mode == 'threaded':
             print("Mode: Threaded")
 
             winner_ten = pop.run(p_th.evaluate, 1)
-
         elif mode == 'parallel':
             print("Mode: Parallel")
 
             winner_ten = pop.run(p_par.evaluate, 1)
-
         else:
             print("Mode: Default")
-            winner_ten = pop.run(eval_fitness, 1)
+            winner_ten = pop.run(eval_genomes, 1)
+
+        if gen % 10 == 0:
+            if not os.path.exists('./logs'):
+                os.mkdir('./logs')
+            with open('./logs/' + str(gen), 'wb') as f:
+                pickle.dump(pop, f)
+
+        gen += 1
 
     if max_trials is 0:
         return winner_ten, (stats_one, stats_ten)
+
 
     stats_hundred = neat.statistics.StatisticsReporter()
     pop = ini_pop((pop.population, pop.species, 0), stats_hundred, config, output)
@@ -210,21 +220,29 @@ def run_neat(gens, env, max_steps, config, max_trials=100, output=True, mode='pa
     p_th = neat.ThreadedEvaluator(8, eval_fitness)
     p_par = neat.ParallelEvaluator(8, eval_fitness)
 
+    gen = 0
+
     while not pop.best_genome or pop.best_genome.fitness < pop.config.fitness_threshold:
-        print("\n\n=================== NEATGym Running Generation %d ===================\n\n" % self.generation)
         if mode == 'threaded':
             print("Mode: Threaded")
 
             winner_ten = pop.run(p_th.evaluate, 1)
-
         elif mode == 'parallel':
             print("Mode: Parallel")
 
             winner_ten = pop.run(p_par.evaluate, 1)
-
         else:
             print("Mode: Default")
-            winner_ten = pop.run(eval_fitness, 1)
+            winner_ten = pop.run(eval_genomes, 1)
+
+        if gen % 10 == 0:
+            if not os.path.exists('./logs'):
+                os.mkdir('./logs')
+            with open('./logs/' + str(gen), 'wb') as f:
+                pickle.dump(pop, f)
+
+        gen += 1
+
 
     if max_trials is 0:
         return winner_ten, (stats_one, stats_ten)

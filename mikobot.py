@@ -132,7 +132,7 @@ class MiKoBot(ForwardServoWalkerMujocoXML):
     # Up-to-date model: https://pastebin.com/raw/EMqf2nAR
     foot_list = ['front_left_foot', 'front_right_foot', 'back_right_foot', 'back_left_foot']
 
-    servo_settings = {'hip': (-np.pi/2, np.pi/2, 1, 0.08, 1), 'ankle': (0.35, 0, 1.7, 0.15, 1.3)}
+    servo_settings = {'hip': (-np.pi/2, np.pi/2, 1, 0.08, 1), 'ankle': (0.35, 0, 1.5, 0.15, 1.3)}
 
     def __init__(self):
         ForwardServoWalkerMujocoXML.__init__(self, "miko.xml", "torso", action_dim=8, obs_dim=10, power=200)
